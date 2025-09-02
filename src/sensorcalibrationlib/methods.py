@@ -53,17 +53,19 @@ class LinearRegression(CalibMethod):
 
   def fit(self, x, y):
     """
-    @TODO add checks for args that dims match, that len(x) > 2, etc..
-
     Future Extension: We can use fit(.., full=True) to get diagnostic info and warn/act 
     according to rank(Vandermonde), singular values etc...
     """
-    x = np.array(x, dtype=np.float64)
-    y = np.array(y, dtype=np.float64)
-    # self._p, diagnostic = np.polynomial.Polynomial.fit(x, y, deg=1, domain=[-1, 1], full=True)
-    self._p = np.polynomial.Polynomial.fit(x, y, deg=1, domain=[-1, 1])#.convert()
-    print("window", self._p.window)
-    print("domain", self._p.domain)
+
+    match (x, y):
+      # TODO: expand that to raise a different error based on the specific condition not satisfied
+      case (list() | tuple() | np.ndarray(), list() | tuple() | np.ndarray()) if len(x) > 2 and len(x) == len(y):
+        x = np.array(x, dtype=np.float64)
+        y = np.array(y, dtype=np.float64)
+        # self._p, diagnostic = np.polynomial.Polynomial.fit(x, y, deg=1, domain=[-1, 1], full=True)
+        self._p = np.polynomial.Polynomial.fit(x, y, deg=1, domain=[-1, 1])#.convert()
+      case _:
+        raise Exception("Give 2 equal len sequences of len > 2 and type list, tuple or np.ndarray.") # Type or Value ?
 
   def __call__(self, raw_val: Union[int, float, list, tuple, np.ndarray]):
     if self._p is None:
