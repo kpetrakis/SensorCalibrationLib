@@ -1,6 +1,9 @@
 from __future__ import annotations
 import numpy as np
 from abc import ABC, abstractmethod
+import json
+from pathlib import Path
+import warnings
 from typing import Dict, Optional, Union
 
 class CalibMethod(ABC):
@@ -63,13 +66,13 @@ class LinearRegression(CalibMethod):
     print("domain", self._p.domain)
 
   def __call__(self, raw_val: Union[int, float, list, tuple, np.ndarray]):
-    if self._p is not None:
-      if isinstance(raw_val, (int, float, tuple, list, np.ndarray)):
-        return self._p(raw_val)
-      else:
-        raise TypeError("__call__ type error")
-    else:
+    if self._p is None:
       raise ValueError("__call__ value error")
+
+    if isinstance(raw_val, (int, float, tuple, list, np.ndarray)):
+      return self._p(raw_val)
+    else:
+      raise TypeError("__call__ type error")
 
   def params(self) -> tuple:
     """
@@ -79,14 +82,44 @@ class LinearRegression(CalibMethod):
     if self._p is None:
       raise ValueError("Linear Calibrator not yet Calibrated. Run calibration, or import parameters.")
     else:
-      # b, a = self._p.coef[0], self._p.coef[1] # convert ??
-      # return map(lambda x: x.item(), (a, b))
-      return tuple(map(lambda x: x.item(), self._p.coef[::-1])) # return
+      return tuple(map(lambda x: x.item(), self._p.coef[::-1]))
 
-  def import_params(self, params_d: Dict[str, float]):
-    pass
+  def import_params(self, filepath: str):
+    """
+    """
+    try:
+      if (path := Path(filepath)).is_file():
+        with open(path, "r") as f:
+          params_d = json.load(f)
 
-  def export_params(self) -> Dict[str, float]:
-    pass
+        # structural pattern matching to avoid sorting dict
+        match params_d:
+          case {"a": a, "b": b} if len(params_d) == 2 and isinstance(a, (int, float)) and isinstance(b, (int, float)):
+            # print(a, b)
+            # print("json contains:", params_d)
+            self._p = np.polynomial.Polynomial(coef=[b,a])
+            print(self._p)
+          case _:
+            # print("json contains:", params_d)
+            raise ValueError(f"{filepath} should only contain a, b keys with numerical values for a*x+b regression.")
+      else:
+        raise FileNotFoundError(f"file {filepath} not found.")
+    except Exception as e:
+      raise
 
+  def export_params(self, filepath: str):
+    try:
+      if self._p is None:
+        raise ValueError("Calibration params not set yet. Fit the model or import params first, before exporting")
+
+      path = Path(filepath)
+      if path.exists():
+        # overwrite or Error ??
+        warnings.warn(f"path {filepath} already exists, will be overwritten by export.")
+
+      params_d = dict(zip(('a', 'b'), self.params()))
+      with open(path, "w") as f:
+        json.dump(params_d, f, indent=2)
+    except Exception as e:
+      raise
 

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from .methods import CalibMethod
+from .methods import CalibMethod, LinearRegression
 import numpy as np
 from typing import Dict, Union
 
@@ -10,7 +10,7 @@ class CalibAPI():
     if isinstance(method, CalibMethod):
       self._method = method
     else:
-      raise TypeError(f"Expected method to be CalibMethod object, got {type(method).__name__}")
+      raise TypeError(f"Expected method to be CalibMethod derived object, got {type(method).__name__}")
 
   @property
   def method(self) -> CalibMethod:
@@ -42,10 +42,15 @@ class CalibAPI():
     return self._method.params()
 
   def export_params(self, filepath: str):
-    pass
+    self._method.export_params(filepath)
 
   def import_params(self, filepath: str):
-    pass
+    self._method.import_params(filepath)
 
   # def import_params(self, params_d):
   #   self._method.import_params(params_d)
+
+  # def __repr__(self):
+  #   match self._method:
+  #     case LinearRegression():
+  #       return f"CalibAPI::Linear{self.parameters()}"
