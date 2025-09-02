@@ -109,17 +109,30 @@ class LinearRegression(CalibMethod):
 
   def export_params(self, filepath: str):
     try:
-      if self._p is None:
-        raise ValueError("Calibration params not set yet. Fit the model or import params first, before exporting")
+      match self._p:
+        case None:
+          raise ValueError("Calibration params not set yet. Fit the model or import params first, before exporting")
+        case np.polynomial.Polynomial():
+          path = Path(filepath)
+          if path.exists():
+            # overwrite or Error ??
+            warnings.warn(f"path {filepath} already exists, will be overwritten by export.")
 
-      path = Path(filepath)
-      if path.exists():
-        # overwrite or Error ??
-        warnings.warn(f"path {filepath} already exists, will be overwritten by export.")
-
-      params_d = dict(zip(('a', 'b'), self.params()))
-      with open(path, "w") as f:
-        json.dump(params_d, f, indent=2)
+          params_d = dict(zip(('a', 'b'), self.params()))
+          with open(path, "w") as f:
+            json.dump(params_d, f, indent=2)
     except Exception as e:
       raise
 
+  # def __repr__(self):
+  #   match self._p:
+  #     case None:
+  #       polyonimo = "None"
+  #     case np.polynomial.Polynomial():
+  #       polyonimo = f"Polynomial(coef={self.params()})" 
+  #     case _:
+  #       # just for sanity
+  #       raise TypeError(f"Polynomial p is of type {type(self._p).__name__}")  
+
+  #   return f"{self.__class__.__name__}({polyonimo})"
+  #   # return f"{self.__class__.__name__}({self.params()[0]}*x + {self.params()[1]})"

@@ -50,7 +50,8 @@ class CalibAPI():
   # def import_params(self, params_d):
   #   self._method.import_params(params_d)
 
-  # def __repr__(self):
-  #   match self._method:
-  #     case LinearRegression():
-  #       return f"CalibAPI::Linear{self.parameters()}"
+  def __repr__(self):
+    match self._method:
+      case LinearRegression():
+        # return f"CalibAPI::Linear{self.parameters()}"
+        return f"{self._method}"
