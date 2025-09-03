@@ -226,7 +226,7 @@ class QuadRegression(CalibMethod):
 
   def __call__(self, raw_val: PredictInputType) -> Union[float, list]:
     if self._p is None:
-      raise ValueError("LinearRegression.__call__() called before Polynomial params are set. Fit or import them first.")
+      raise ValueError("QuadraticRegression.__call__() called before Polynomial params are set. Fit or import them first.")
 
     if isinstance(raw_val, (int, float, tuple, list, np.ndarray)):
       np_res = self._p(raw_val) # returns np.array
@@ -236,11 +236,11 @@ class QuadRegression(CalibMethod):
         case _:
           return np_res.tolist()
     else:
-      raise TypeError(f"LinearRegression.__call__(x) expected x to be one of (int, float, tuple, list, np.array), got {type(raw_val).__name__}")
+      raise TypeError(f"QuadraticRegression.__call__(x) expected x to be one of (int, float, tuple, list, np.array), got {type(raw_val).__name__}")
   
   def params(self) -> Tuple[float, float, float]:
     if self._p is None:
-      raise ValueError("Linear Calibrator not yet Calibrated. Run calibration, or import parameters.")
+      raise ValueError("Quadratic Calibrator not yet Calibrated. Run calibration, or import parameters.")
     else:
       return tuple(map(lambda x: x.item(), self._p.coef[::-1]))
   
