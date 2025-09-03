@@ -4,34 +4,121 @@ from abc import ABC, abstractmethod
 import json
 from pathlib import Path
 import warnings
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Tuple
 from .types import CalibInputType, PredictInputType
 
 class CalibMethod(ABC):
+  """
+  Abstract Base Class for calibration methods.
+
+  This class defines the interface that all calibration methods must implement.
+  """
   def __init__(self):
     '''
     @TODO: maybe receive coef as arguments ??
     '''
+    pass
 
   @abstractmethod
-  def fit(self, x: CalibInputType, y: CalibInputType):
+  def fit(self, x: CalibInputType, y: CalibInputType) -> None:
+    """
+    Use np.polynomial.Polynomial as a backend to fit input data.
+
+    Parameters
+    ----------
+    x : CalibInputType
+      Input data for calibration.
+    y : CalibInputType
+      Target data for calibration.
+    """
     pass
 
   @abstractmethod
   def __call__(self, raw_val: PredictInputType) -> Union[float, List[float]]:
+    """
+    Use np.polynomial.Polynomial backend to calculate the response of the Regression model.
+
+    Parameters
+    ----------
+    raw_val : PredictInputType
+      Raw input value(s) for which prediction is requested.
+
+    Returns
+    -------
+    float or List[float]
+      Regression result.
+    """
     pass
 
   @abstractmethod
   def params(self):
+    """
+    Return polynomial coefficients in descending degree order.
+
+    E.g. for the polynomial 2*x + 3, this method returns (2, 3).
+
+    Returns
+    -------
+    Tuple[float, float]
+      The coefficients of the polynomial, from highest to lowest degree.
+
+    Raises
+    ------
+    ValueError
+      If the calibrator has not yet been fitted or parameters imported.
+    """
     pass
 
   @abstractmethod
   def import_params(self, filepath: str):
+    """
+    Import calibration parameters from a JSON file and set up the np.polynomial.Polynomial backend coeficients.
+
+    Parameters
+    ----------
+    filepath : str
+      The path to the JSON file containing calibration parameters. 
+      The file must contain exactly as many keys as the degree of np.polynomial.Polynomial,
+      with numerical (int or float) values, representing the coefficients of the polynomial.
+
+    Raises
+    ------
+    FileNotFoundError
+      If the specified file does not exist.
+    ValueError
+      If the file contents do not match the expected format.
+    Exception
+      Propagates any exceptions encountered during file reading or parsing.
+    """
     pass
 
   @abstractmethod
   def export_params(self, filepath: str):
+    """
+    Export the current np.polynomial.Polynomial backend coefficients to a JSON file. 
+
+    Parameters
+    ----------
+    filepath : str
+      The destination file path where the calibration parameters will be saved.
+
+    Raises
+    ------
+    ValueError
+      If the calibration parameters have not been set (model not fitted or params not imported).
+    
+    """
     pass
+
+  def __repr__(self):
+    match self._p:
+      case None:
+        return f"{self.__class__.__name__}(params = None)"
+      case np.polynomial.Polynomial():
+        return f"{self.__class__.__name__}(params = {self.params()})"
+      case _:
+        # just for sanity
+        raise TypeError(f"Polynomial p is of type {type(self._p).__name__}")  
 
 class LinearRegression(CalibMethod):
   """
@@ -45,7 +132,7 @@ class LinearRegression(CalibMethod):
   def p(self) -> Optional[np.polynomial.Polynomial]:
     return self._p
 
-  def fit(self, x: CalibInputType, y: CalibInputType):
+  def fit(self, x: CalibInputType, y: CalibInputType) -> None:
     """
     Future Extension: We can use fit(.., full=True) to get diagnostic info and warn/act 
     according to rank(Vandermonde), singular values etc...
@@ -78,19 +165,13 @@ class LinearRegression(CalibMethod):
     else:
       raise TypeError(f"LinearRegression.__call__(x) expected x to be one of (int, float, tuple, list, np.array), got {type(raw_val).__name__}")
 
-  def params(self) -> tuple:
-    """
-    return polynomial coefficients in descending degree order
-    e.g. for 2*x + 3 -> (2, 3)
-    """
+  def params(self) -> Tuple[float, float]:
     if self._p is None:
       raise ValueError("Linear Calibrator not yet Calibrated. Run calibration, or import parameters.")
     else:
       return tuple(map(lambda x: x.item(), self._p.coef[::-1]))
 
-  def import_params(self, filepath: str):
-    """
-    """
+  def import_params(self, filepath: str) -> None:
     try:
       if (path := Path(filepath)).is_file():
         with open(path, "r") as f:
@@ -107,7 +188,7 @@ class LinearRegression(CalibMethod):
     except Exception as e:
       raise
 
-  def export_params(self, filepath: str):
+  def export_params(self, filepath: str) -> None:
     try:
       match self._p:
         case None:
@@ -123,16 +204,3 @@ class LinearRegression(CalibMethod):
             json.dump(params_d, f, indent=2)
     except Exception as e:
       raise
-
-  # def __repr__(self):
-  #   match self._p:
-  #     case None:
-  #       polyonimo = "None"
-  #     case np.polynomial.Polynomial():
-  #       polyonimo = f"Polynomial(coef={self.params()})" 
-  #     case _:
-  #       # just for sanity
-  #       raise TypeError(f"Polynomial p is of type {type(self._p).__name__}")  
-
-  #   return f"{self.__class__.__name__}({polyonimo})"
-  #   # return f"{self.__class__.__name__}({self.params()[0]}*x + {self.params()[1]})"

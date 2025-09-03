@@ -2,11 +2,17 @@ from __future__ import annotations
 from .methods import CalibMethod, LinearRegression
 from .types import CalibInputType, PredictInputType
 import numpy as np
-from typing import Union, Optional, List
+from typing import Union, Optional, List, Tuple
 
 class CalibAPI():
   def __init__(self, method: Optional[CalibMethod] = None):
     """
+    Initialize the CalibAPI instance.
+
+    Parameters
+    ----------
+    method : Optional[CalibMethod]
+      The calibration method to use. If None no operations can run (default is None).
     """
     match method:
       case CalibMethod() | None:
@@ -16,8 +22,6 @@ class CalibAPI():
 
   @property
   def method(self) -> Optional[CalibMethod]:
-    """
-    """
     return self._method
 
   @method.setter
@@ -30,20 +34,44 @@ class CalibAPI():
   
   def calibrate(self, x: CalibInputType, y: CalibInputType) -> None:
     """
-    @TODO: Why I use return res ??
+    Performs calibration using the instance's calibration method.
+
+    Parameters
+    ----------
+    x : CalibInputType
+      Input data for calibration.
+    y : CalibInputType
+      Target data for calibration.
+
+    Raises
+    ------
+    ValueError
+      If no calibration method is set (`self._method` is None).
     """
     match self._method:
       case CalibMethod():
-        print("(CalibAPI::calibrate) called")
         self._method.fit(x, y)
-        # res = self._method.fit(x, y)
-        # return res
       case None:
         raise ValueError("Can't calibrate without a calibration method.")
 
   def predict(self, raw_val: PredictInputType) -> Union[float, List[float]]:
     """ 
-    calculate the true values using calibration method parameters from a raw value
+    Calculates the target values from a raw input using the configured calibration method.
+
+    Parameters
+    ----------
+    raw_val : PredictInputType
+      The raw input value(s) to run regression on.
+
+    Returns
+    -------
+    float or List[float]
+      The predicted y value(s) corresponding to the input.
+
+    Raises
+    ------
+    ValueError
+      If no calibration method is set (`self._method` is None).
     """
     match self._method:
       case CalibMethod():
@@ -51,9 +79,19 @@ class CalibAPI():
       case None:
         raise ValueError("Can't predict without a calibration method.")
 
-  def parameters(self):
+  def parameters(self) -> Optional[Tuple]:
     """
-    Method to receive the calibration parameters.
+    Retrieve the current calibration parameters from the configured method.
+
+    Returns
+    -------
+    Optional[Tuple]
+      The calibration parameters (coeficients of Polynomial) returned by the calibration method.
+
+    Raises
+    ------
+    ValueError
+      If no calibration method is set (`self._method` is None)
     """
     match self._method:
       case CalibMethod():
@@ -62,6 +100,19 @@ class CalibAPI():
         raise ValueError("No calibration method is set to get parameters from.")
 
   def export_params(self, filepath: str):
+    """
+    Export the current calibration parameters to a file.
+
+    Parameters
+    ----------
+    filepath : str
+      The path to the file where the parameters will be saved.
+
+    Raises
+    ------
+    ValueError
+      If no calibration method is set (`self._method` is None).
+    """
     match self._method:
       case CalibMethod():
         self._method.export_params(filepath)
@@ -70,6 +121,19 @@ class CalibAPI():
 
 
   def import_params(self, filepath: str):
+    """
+    Import calibration parameters from a file.
+
+    Parameters
+    ----------
+    filepath : str
+      The path to the file from which parameters will be loaded.
+
+    Raises
+    ------
+    ValueError
+      If no calibration method is set (`self._method` is None).
+    """
     match self._method:
       case CalibMethod():
         self._method.import_params(filepath)
@@ -80,7 +144,4 @@ class CalibAPI():
   #   self._method.import_params(params_d)
 
   def __repr__(self):
-    match self._method:
-      case LinearRegression():
-        # return f"CalibAPI::Linear{self.parameters()}"
-        return f"{self._method}"
+    return f"CalibAPI(method = {self._method})"
