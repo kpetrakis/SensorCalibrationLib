@@ -140,8 +140,5 @@ class CalibAPI():
       case None:
         raise ValueError("No calibration method is set to import parameters into.")
 
-  # def import_params(self, params_d):
-  #   self._method.import_params(params_d)
-
   def __repr__(self):
     return f"CalibAPI(method = {self._method})"
