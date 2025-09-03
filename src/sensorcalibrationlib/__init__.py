@@ -1,2 +1,2 @@
 from .calib import CalibAPI
-from .methods import LinearRegression
+from .methods import CalibMethod, LinearRegression
