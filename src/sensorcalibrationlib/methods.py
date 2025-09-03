@@ -9,6 +9,7 @@ from typing import Dict, Optional, Union
 class CalibMethod(ABC):
   def __init__(self):
     '''
+    @TODO: maybe receive coef as arguments ??
     '''
 
   @abstractmethod
@@ -31,14 +32,6 @@ class CalibMethod(ABC):
   def export_params(self, filepath: str):
     pass
 
-  # @abstractmethod
-  # def import_params(self, params_d: Dict[str, float]):
-  #   pass
-
-  # @abstractmethod
-  # def export_params(self) -> Dict[str, float]:
-  #   pass
-
 class LinearRegression(CalibMethod):
   """
   TODO: make _p a property ??
@@ -47,9 +40,9 @@ class LinearRegression(CalibMethod):
     super().__init__()
     self._p : Optional[np.polynomial.Polynomial] = None
 
-  # @property
-  # def p(self) -> Optional[np.polynomial.Polynomial]:
-  #   return self._p
+  @property
+  def p(self) -> Optional[np.polynomial.Polynomial]:
+    return self._p
 
   def fit(self, x, y):
     """
@@ -67,18 +60,26 @@ class LinearRegression(CalibMethod):
       case _:
         raise Exception("Give 2 equal len sequences of len > 2 and type list, tuple or np.ndarray.") # Type or Value ?
 
-  def __call__(self, raw_val: Union[int, float, list, tuple, np.ndarray]):
+  def __call__(self, raw_val: Union[int, float, list, tuple, np.ndarray]) -> Union[float, list]:
+    """
+    given an empty list [], it will return []
+    """
     if self._p is None:
-      raise ValueError("__call__ value error")
+      raise ValueError("LinearRegression.__call__() called before Polynomial params are set. Fit or import them first.")
 
     if isinstance(raw_val, (int, float, tuple, list, np.ndarray)):
-      return self._p(raw_val)
+      np_res = self._p(raw_val) # returns np.array
+      match np_res.size:
+        case 1:
+          return np_res.item()
+        case _:
+          return np_res.tolist()
     else:
-      raise TypeError("__call__ type error")
+      raise TypeError(f"LinearRegression.__call__(x) expected x to be one of (int, float, tuple, list, np.array), got {type(raw_val).__name__}")
 
   def params(self) -> tuple:
     """
-    return polynomial coefficients in descending order
+    return polynomial coefficients in descending degree order
     e.g. for 2*x + 3 -> (2, 3)
     """
     if self._p is None:
@@ -97,12 +98,8 @@ class LinearRegression(CalibMethod):
         # structural pattern matching to avoid sorting dict
         match params_d:
           case {"a": a, "b": b} if len(params_d) == 2 and isinstance(a, (int, float)) and isinstance(b, (int, float)):
-            # print(a, b)
-            # print("json contains:", params_d)
             self._p = np.polynomial.Polynomial(coef=[b,a])
-            print(self._p)
           case _:
-            # print("json contains:", params_d)
             raise ValueError(f"{filepath} should only contain a, b keys with numerical values for a*x+b regression.")
       else:
         raise FileNotFoundError(f"file {filepath} not found.")
