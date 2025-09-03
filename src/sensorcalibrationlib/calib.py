@@ -1,5 +1,5 @@
 from __future__ import annotations
-from .methods import CalibMethod, LinearRegression
+from .methods import CalibMethod
 from .types import CalibInputType, PredictInputType
 import numpy as np
 from typing import Union, Optional, List, Tuple
