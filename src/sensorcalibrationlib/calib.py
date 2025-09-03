@@ -1,7 +1,8 @@
 from __future__ import annotations
 from .methods import CalibMethod, LinearRegression
+from .types import CalibInputType, PredictInputType
 import numpy as np
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 class CalibAPI():
   def __init__(self, method: Optional[CalibMethod] = None):
@@ -27,7 +28,7 @@ class CalibAPI():
       case _:
         raise TypeError(f"Expected method to be CalibMethod derived object, got {type(method).__name__}")
   
-  def calibrate(self, x, y):
+  def calibrate(self, x: CalibInputType, y: CalibInputType) -> None:
     """
     @TODO: Why I use return res ??
     """
@@ -40,7 +41,7 @@ class CalibAPI():
       case None:
         raise ValueError("Can't calibrate without a calibration method.")
 
-  def predict(self, raw_val) -> Union[int, float, list, tuple, np.ndarray]:
+  def predict(self, raw_val: PredictInputType) -> Union[float, List[float]]:
     """ 
     calculate the true values using calibration method parameters from a raw value
     """

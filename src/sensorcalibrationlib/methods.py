@@ -4,7 +4,8 @@ from abc import ABC, abstractmethod
 import json
 from pathlib import Path
 import warnings
-from typing import Dict, Optional, Union
+from typing import Optional, Union, List
+from .types import CalibInputType, PredictInputType
 
 class CalibMethod(ABC):
   def __init__(self):
@@ -13,11 +14,11 @@ class CalibMethod(ABC):
     '''
 
   @abstractmethod
-  def fit(self, x, y):
+  def fit(self, x: CalibInputType, y: CalibInputType):
     pass
 
   @abstractmethod
-  def __call__(self, raw_val: Union[int, float, list, tuple, np.ndarray]):
+  def __call__(self, raw_val: PredictInputType) -> Union[float, List[float]]:
     pass
 
   @abstractmethod
@@ -44,7 +45,7 @@ class LinearRegression(CalibMethod):
   def p(self) -> Optional[np.polynomial.Polynomial]:
     return self._p
 
-  def fit(self, x, y):
+  def fit(self, x: CalibInputType, y: CalibInputType):
     """
     Future Extension: We can use fit(.., full=True) to get diagnostic info and warn/act 
     according to rank(Vandermonde), singular values etc...
@@ -60,7 +61,7 @@ class LinearRegression(CalibMethod):
       case _:
         raise Exception("Give 2 equal len sequences of len > 2 and type list, tuple or np.ndarray.") # Type or Value ?
 
-  def __call__(self, raw_val: Union[int, float, list, tuple, np.ndarray]) -> Union[float, list]:
+  def __call__(self, raw_val: PredictInputType) -> Union[float, list]:
     """
     given an empty list [], it will return []
     """
