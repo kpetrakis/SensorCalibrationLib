@@ -204,3 +204,76 @@ class LinearRegression(CalibMethod):
             json.dump(params_d, f, indent=2)
     except Exception as e:
       raise
+  
+
+class QuadRegression(CalibMethod):
+  def __init__(self):
+    super().__init__()
+    self._p : Optional[np.polynomial.Polynomial] = None
+
+  @property
+  def p(self) -> Optional[np.polynomial.Polynomial]:
+    return self._p
+
+  def fit(self, x: CalibInputType, y: CalibInputType) -> None:
+    match (x, y):
+      case (list() | tuple() | np.ndarray(), list() | tuple() | np.ndarray()) if len(x) > 2 and len(x) == len(y):
+        x = np.array(x, dtype=np.float64)
+        y = np.array(y, dtype=np.float64)
+        self._p = np.polynomial.Polynomial.fit(x, y, deg=2, domain=[-1, 1])#.convert()
+      case _:
+        raise Exception("Give 2 equal len sequences of len > 2 and type list, tuple or np.ndarray.") # Type or Value ?
+
+  def __call__(self, raw_val: PredictInputType) -> Union[float, list]:
+    if self._p is None:
+      raise ValueError("LinearRegression.__call__() called before Polynomial params are set. Fit or import them first.")
+
+    if isinstance(raw_val, (int, float, tuple, list, np.ndarray)):
+      np_res = self._p(raw_val) # returns np.array
+      match np_res.size:
+        case 1:
+          return np_res.item()
+        case _:
+          return np_res.tolist()
+    else:
+      raise TypeError(f"LinearRegression.__call__(x) expected x to be one of (int, float, tuple, list, np.array), got {type(raw_val).__name__}")
+  
+  def params(self) -> Tuple[float, float, float]:
+    if self._p is None:
+      raise ValueError("Linear Calibrator not yet Calibrated. Run calibration, or import parameters.")
+    else:
+      return tuple(map(lambda x: x.item(), self._p.coef[::-1]))
+  
+  def import_params(self, filepath: str) -> None:
+    try:
+      if (path := Path(filepath)).is_file():
+        with open(path, "r") as f:
+          params_d = json.load(f)
+
+        # structural pattern matching to avoid sorting dict
+        match params_d:
+          case {"a": a, "b": b, "c":c} if len(params_d) == 3 and isinstance(a, (int, float)) and isinstance(b, (int, float)) and isinstance(c, (int, float)):
+            self._p = np.polynomial.Polynomial(coef=[c,b,a])
+          case _:
+            raise ValueError(f"{filepath} should only contain a, b, c keys with numerical values for a*x**2+b*x+c regression.")
+      else:
+        raise FileNotFoundError(f"file {filepath} not found.")
+    except Exception as e:
+      raise
+  
+  def export_params(self, filepath: str) -> None:
+    try:
+      match self._p:
+        case None:
+          raise ValueError("Calibration params not set yet. Fit the model or import params first, before exporting")
+        case np.polynomial.Polynomial():
+          path = Path(filepath)
+          if path.exists():
+            # overwrite or Error ??
+            warnings.warn(f"path {filepath} already exists, will be overwritten by export.")
+
+          params_d = dict(zip(('a', 'b', 'c'), self.params()))
+          with open(path, "w") as f:
+            json.dump(params_d, f, indent=2)
+    except Exception as e:
+      raise
