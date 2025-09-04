@@ -98,6 +98,16 @@ class CalibAPI():
         return self._method.params()
       case None:
         raise ValueError("No calibration method is set to get parameters from.")
+  
+  def receive_calibration_parameters(self, *args):
+    """
+    set calibration parameters in descending degree order. e.g. for 3*x + 2, receive_calibration_parameters(3,2) must be called 
+    """
+    match self._method:
+      case CalibMethod():
+        self._method.set_params(*args)
+      case None:
+        raise ValueError("No calibration method is set to set parameters to.")
 
   def export_params(self, filepath: str):
     """

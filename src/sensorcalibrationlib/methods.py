@@ -51,6 +51,10 @@ class CalibMethod(ABC):
     pass
 
   @abstractmethod
+  def set_params(self):
+    pass
+
+  @abstractmethod
   def params(self):
     """
     Return polynomial coefficients in descending degree order.
@@ -144,6 +148,7 @@ class LinearRegression(CalibMethod):
         x = np.array(x, dtype=np.float64)
         y = np.array(y, dtype=np.float64)
         # self._p, diagnostic = np.polynomial.Polynomial.fit(x, y, deg=1, domain=[-1, 1], full=True)
+        # resid, rank, sv, rcond = diagnostic
         self._p = np.polynomial.Polynomial.fit(x, y, deg=1, domain=[-1, 1])#.convert()
       case _:
         raise Exception("Give 2 equal len sequences of len > 2 and type list, tuple or np.ndarray.") # Type or Value ?
@@ -164,6 +169,20 @@ class LinearRegression(CalibMethod):
           return np_res.tolist()
     else:
       raise TypeError(f"LinearRegression.__call__(x) expected x to be one of (int, float, tuple, list, np.array), got {type(raw_val).__name__}")
+
+  def set_params(self, *args):
+    """
+    create polynomial on set or error ??
+    """
+    match len(args):
+      case 1 if isinstance(args[0], (tuple, list)) and len(args[0]) == 2:
+        self._p = np.polynomial.Polynomial(coef=args[0][::-1])
+      case 2:
+        a, b = args
+        self._p = np.polynomial.Polynomial(coef=[b,a])
+      case _:
+        raise ValueError("For linear model, exactly 2 parameters must be provided (either in tuple, list or seperately).")
+    
 
   def params(self) -> Tuple[float, float]:
     if self._p is None:
