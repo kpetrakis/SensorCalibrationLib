@@ -101,7 +101,19 @@ class CalibAPI():
   
   def receive_calibration_parameters(self, *args) -> None:
     """
-    set calibration parameters in descending degree order. e.g. for 3*x + 2, receive_calibration_parameters(3,2) must be called 
+    Set calibration parameters in descending degree order for the current calibration method.    
+
+    For example, for a linear function 3*x + 2, call receive_calibration_parameters(3, 2).
+    Parameters
+    ----------
+    *args : float
+      Calibration parameters corresponding to polynomial coefficients 
+      in descending order of degree.
+
+    Raises
+    ------
+    ValueError
+      If no calibration method is set when attempting to set parameters.
     """
     match self._method:
       case CalibMethod():

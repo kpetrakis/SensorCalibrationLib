@@ -51,7 +51,21 @@ class CalibMethod(ABC):
     pass
 
   @abstractmethod
-  def set_params(self) -> None:
+  def set_params(self, *arg) -> None:
+    """
+    Set polynomial parameters to the specified values.
+
+    Parameters
+    ----------
+    *args : tuple or list, or separate numeric arguments
+      The polynomial coefficients in descending order of degree.
+      For example, for 3*x + 2, call set_params(3, 2) or set_params((3, 2)).
+
+    Raises
+    ------
+    ValueError
+      If the number of parameters is not exactly 2 or the input format is incorrect.
+    """
     pass
 
   @abstractmethod
@@ -126,7 +140,9 @@ class CalibMethod(ABC):
 
 class LinearFit(CalibMethod):
   """
-  TODO: make _p a property ??
+  LinearFit models a linear calibration method using degree-1 polynomial fitting.
+
+  e.g. y = a*x + b
   """
   def __init__(self):
     super().__init__()
@@ -226,6 +242,11 @@ class LinearFit(CalibMethod):
   
 
 class QuadraticFit(CalibMethod):
+  """
+  QuadraticFit models a quadratic calibration method using degree-2 polynomial fitting.
+
+  e.g. y = a*(x**2) + b*x + c
+  """
   def __init__(self):
     super().__init__()
     self._p : Optional[np.polynomial.Polynomial] = None
