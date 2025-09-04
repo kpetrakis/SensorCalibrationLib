@@ -1,7 +1,4 @@
 from sensorcalibrationlib import CalibAPI, LinearFit, QuadraticFit
-import numpy as np
-
-np.set_printoptions(precision=3, suppress=False)
 
 if __name__ == "__main__":
   
