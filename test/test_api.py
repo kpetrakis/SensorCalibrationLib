@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 import json
-from sensorcalibrationlib import CalibAPI, CalibMethod, LinearRegression
+from sensorcalibrationlib import CalibAPI, CalibMethod, LinearFit, QuadraticFit
 
 class CalibAPITest(unittest.TestCase):
 
@@ -9,7 +9,7 @@ class CalibAPITest(unittest.TestCase):
     self.x = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0] 
     self.y = [2.0, 4.0, 6.0, 8.0, 10.0, 12.0] 
     self.api = CalibAPI()
-    self.api2 = CalibAPI(LinearRegression())
+    self.api2 = CalibAPI(LinearFit())
     # super().setUp()
 
   # def test_init(self):
@@ -24,9 +24,9 @@ class CalibAPITest(unittest.TestCase):
       self.api.method = dict() 
 
     # check correct init
-    api = CalibAPI(LinearRegression())
+    api = CalibAPI(LinearFit())
     self.assertIsInstance(api.method, CalibMethod)
-    self.assertIsInstance(api.method, LinearRegression)
+    self.assertIsInstance(api.method, LinearFit)
 
   def test_calibrate(self):
     # check errors
@@ -37,7 +37,7 @@ class CalibAPITest(unittest.TestCase):
     self.assertRaises(Exception, lambda: self.api2.calibrate(wrong_len_inp, self.y))
     self.assertRaises(TypeError, lambda: self.api2.calibrate()) # no args
 
-    self.api.method = LinearRegression()
+    self.api.method = LinearFit()
     self.api.calibrate(self.x, self.y)
     np.testing.assert_allclose(self.api.parameters(), [2, 2], rtol=1e-12, atol=0)
 
@@ -74,16 +74,40 @@ class CalibAPITest(unittest.TestCase):
     self.assertEqual(self.api2.predict([16, 17.]), [34, 36])
 
   def test_method_setup(self):
-    """
-    I might need a QuadRegression first for this..
-    """
-    pass
+    self.assertIsInstance(self.api2.method, LinearFit)
+    self.api2.method = QuadraticFit()
+    self.assertIsInstance(self.api2.method, QuadraticFit)
+
+  def test_receive_caparams(self):
+    # check errors
+    self.assertRaises(ValueError, lambda: self.api.receive_calibration_parameters(5, 4))
+    self.api.method = LinearFit()
+    self.assertRaises(ValueError, lambda: self.api.receive_calibration_parameters(5, 4, 3))
+    self.assertRaises(ValueError, lambda: self.api.receive_calibration_parameters(5))
+    self.assertRaises(ValueError, lambda: self.api.receive_calibration_parameters([5]))
+    self.assertRaises(ValueError, lambda: self.api.receive_calibration_parameters((5, 5, 5)))
+    self.api.method = QuadraticFit()
+    self.assertRaises(ValueError, lambda: self.api.receive_calibration_parameters(1, 5, 4, 3))
+    self.assertRaises(ValueError, lambda: self.api.receive_calibration_parameters(5))
+    self.assertRaises(ValueError, lambda: self.api.receive_calibration_parameters([5, 55]))
+    self.assertRaises(ValueError, lambda: self.api.receive_calibration_parameters((5, 5, 5, 18)))
+
+    self.api.method = LinearFit()
+    self.api.receive_calibration_parameters(5, 4)
+    self.assertEqual(self.api.parameters(), (5.0, 4.0))
+    self.api2.receive_calibration_parameters([15, 28])
+    self.assertEqual(self.api2.parameters(), (15.0, 28.0))
+
+
+    self.api.method = QuadraticFit()
+    self.api.receive_calibration_parameters(3, 2, 1)
+    self.assertEqual(self.api.parameters(), (3.0, 2.0, 1.0))
 
   def test_import_params(self):
     # check importing without method set
     self.assertRaises(ValueError, lambda: self.api.import_params('param_files/api_test_0.json'))
 
-    self.api.method = LinearRegression()
+    self.api.method = LinearFit()
     self.api.import_params('param_files/api_test_0.json')
     self.assertEqual(self.api.parameters(), (15, 3))
 

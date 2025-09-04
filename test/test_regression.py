@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
-from sensorcalibrationlib import LinearRegression
+from sensorcalibrationlib import LinearFit
 
-class LinearRegressionTest(unittest.TestCase):
+class LinearFitTest(unittest.TestCase):
 
     def setUp(self):
       self.raw1 = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
@@ -26,7 +26,7 @@ class LinearRegressionTest(unittest.TestCase):
       self.raw3 = [1.0, 10.0]
       self.true3 = [2.0, 20]
 
-      self.lr = LinearRegression()
+      self.lr = LinearFit()
 
     def test_init(self):
       self.assertEqual(self.lr.p, None)
@@ -57,7 +57,7 @@ class LinearRegressionTest(unittest.TestCase):
 
     def test_predict(self):
       '''
-      testing __call__ of LinearRegression
+      testing __call__ of LinearFit
       '''
       self.lr.fit(self.raw1, self.true1)
       self.assertEqual(self.lr(self.raw_val_scalar_1), self.target_scalar_1)
@@ -68,7 +68,7 @@ class LinearRegressionTest(unittest.TestCase):
       np.testing.assert_allclose(self.lr(self.raw_val_arr_2), self.target_arr_2, rtol=1e-12, atol=1e-12)
 
       # check attempt prediction before fitting
-      linear_reg = LinearRegression()
+      linear_reg = LinearFit()
       self.assertRaises(ValueError, linear_reg, 3)
 
       # check attempt prediction with invalid arg, e.g. lr("bla")
@@ -83,6 +83,18 @@ class LinearRegressionTest(unittest.TestCase):
       self.lr.fit(x, y)
       np.testing.assert_allclose(self.lr.params(), [2.0, 0.0], rtol=1e-12, atol=1e-12)
       np.testing.assert_allclose(self.lr.p.coef[::-1], [2.0, 0.0], rtol=1e-12, atol=1e-12)
+
+    def test_set_params(self):
+      # check errors
+      self.assertRaises(ValueError, lambda: self.lr.set_params(5, 4, 3))
+      self.assertRaises(ValueError, lambda: self.lr.set_params(5))
+      self.assertRaises(ValueError, lambda: self.lr.set_params([5]))
+      self.assertRaises(ValueError, lambda: self.lr.set_params((5, 5, 5)))
+
+      self.lr.set_params(5, 4)
+      self.assertEqual(self.lr.params(), (5.0, 4.0))
+      self.lr.set_params([15, 28])
+      self.assertEqual(self.lr.params(), (15.0, 28.0))
 
 
     def test_import_params(self):

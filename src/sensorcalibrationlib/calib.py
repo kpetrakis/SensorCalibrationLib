@@ -99,7 +99,7 @@ class CalibAPI():
       case None:
         raise ValueError("No calibration method is set to get parameters from.")
   
-  def receive_calibration_parameters(self, *args):
+  def receive_calibration_parameters(self, *args) -> None:
     """
     set calibration parameters in descending degree order. e.g. for 3*x + 2, receive_calibration_parameters(3,2) must be called 
     """

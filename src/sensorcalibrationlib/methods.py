@@ -51,7 +51,7 @@ class CalibMethod(ABC):
     pass
 
   @abstractmethod
-  def set_params(self):
+  def set_params(self) -> None:
     pass
 
   @abstractmethod
@@ -124,7 +124,7 @@ class CalibMethod(ABC):
         # just for sanity
         raise TypeError(f"Polynomial p is of type {type(self._p).__name__}")  
 
-class LinearRegression(CalibMethod):
+class LinearFit(CalibMethod):
   """
   TODO: make _p a property ??
   """
@@ -158,7 +158,7 @@ class LinearRegression(CalibMethod):
     given an empty list [], it will return []
     """
     if self._p is None:
-      raise ValueError("LinearRegression.__call__() called before Polynomial params are set. Fit or import them first.")
+      raise ValueError("LinearFit.__call__() called before Polynomial params are set. Fit or import them first.")
 
     if isinstance(raw_val, (int, float, tuple, list, np.ndarray)):
       np_res = self._p(raw_val) # returns np.array
@@ -168,9 +168,9 @@ class LinearRegression(CalibMethod):
         case _:
           return np_res.tolist()
     else:
-      raise TypeError(f"LinearRegression.__call__(x) expected x to be one of (int, float, tuple, list, np.array), got {type(raw_val).__name__}")
+      raise TypeError(f"LinearFit.__call__(x) expected x to be one of (int, float, tuple, list, np.array), got {type(raw_val).__name__}")
 
-  def set_params(self, *args):
+  def set_params(self, *args) -> None:
     """
     create polynomial on set or error ??
     """
@@ -201,7 +201,7 @@ class LinearRegression(CalibMethod):
           case {"a": a, "b": b} if len(params_d) == 2 and isinstance(a, (int, float)) and isinstance(b, (int, float)):
             self._p = np.polynomial.Polynomial(coef=[b,a])
           case _:
-            raise ValueError(f"{filepath} should only contain a, b keys with numerical values for a*x+b regression.")
+            raise ValueError(f"{filepath} should only contain a, b keys with numerical values for a*x+b model.")
       else:
         raise FileNotFoundError(f"file {filepath} not found.")
     except Exception as e:
@@ -225,7 +225,7 @@ class LinearRegression(CalibMethod):
       raise
   
 
-class QuadRegression(CalibMethod):
+class QuadraticFit(CalibMethod):
   def __init__(self):
     super().__init__()
     self._p : Optional[np.polynomial.Polynomial] = None
@@ -245,7 +245,7 @@ class QuadRegression(CalibMethod):
 
   def __call__(self, raw_val: PredictInputType) -> Union[float, list]:
     if self._p is None:
-      raise ValueError("QuadraticRegression.__call__() called before Polynomial params are set. Fit or import them first.")
+      raise ValueError("QuadraticFit.__call__() called before Polynomial params are set. Fit or import them first.")
 
     if isinstance(raw_val, (int, float, tuple, list, np.ndarray)):
       np_res = self._p(raw_val) # returns np.array
@@ -255,13 +255,26 @@ class QuadRegression(CalibMethod):
         case _:
           return np_res.tolist()
     else:
-      raise TypeError(f"QuadraticRegression.__call__(x) expected x to be one of (int, float, tuple, list, np.array), got {type(raw_val).__name__}")
+      raise TypeError(f"QuadraticFit.__call__(x) expected x to be one of (int, float, tuple, list, np.array), got {type(raw_val).__name__}")
   
   def params(self) -> Tuple[float, float, float]:
     if self._p is None:
       raise ValueError("Quadratic Calibrator not yet Calibrated. Run calibration, or import parameters.")
     else:
       return tuple(map(lambda x: x.item(), self._p.coef[::-1]))
+
+  def set_params(self, *args) -> None:
+    """
+    create polynomial on set or error ??
+    """
+    match len(args):
+      case 1 if isinstance(args[0], (tuple, list)) and len(args[0]) == 3:
+        self._p = np.polynomial.Polynomial(coef=args[0][::-1])
+      case 3:
+        a, b, c = args
+        self._p = np.polynomial.Polynomial(coef=[c,b,a])
+      case _:
+        raise ValueError("For quadratic model, exactly 3 parameters must be provided (either in tuple, list or seperately).")
   
   def import_params(self, filepath: str) -> None:
     try:
@@ -274,7 +287,7 @@ class QuadRegression(CalibMethod):
           case {"a": a, "b": b, "c":c} if len(params_d) == 3 and isinstance(a, (int, float)) and isinstance(b, (int, float)) and isinstance(c, (int, float)):
             self._p = np.polynomial.Polynomial(coef=[c,b,a])
           case _:
-            raise ValueError(f"{filepath} should only contain a, b, c keys with numerical values for a*x**2+b*x+c regression.")
+            raise ValueError(f"{filepath} should only contain a, b, c keys with numerical values for a*x**2+b*x+c quadratic model.")
       else:
         raise FileNotFoundError(f"file {filepath} not found.")
     except Exception as e:
