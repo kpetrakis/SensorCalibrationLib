@@ -57,7 +57,6 @@ sensorcalibrationlib v0.1.0
 └── numpy v2.3.2
 ```
 
-
 ## Running example
 
 Run
