@@ -87,7 +87,7 @@ CalibAPI with Quadratice model parameters : (2.000000000000001, 0.99999999999999
 CalibAPI with Quadratice model after import : CalibAPI(method = QuadraticFit(params = (2.0, 3.0, 10.0)))
 ```
 
-Feel free to modify `main.py` or add your own file to check the functionality.
+Feel free to modify `main.py` or add your own scripts to check the functionality.
 
 ## Running tests
 
@@ -106,6 +106,7 @@ Everything was run/tested on Artix Linux 6.15.2 and Ubuntu 22.04
 
 - [ ] Add support for other polynomial familes (e.g. Chebysev, Legendre)
 - [ ] Add the ability to define parameters at CalibMethod creation (e.g. `LinearFit(2,3)`)
+- [ ] Check for numerical Stability.
 - [ ] Use logging for warn messages and logs.
 - [ ] Add dunder method operations (`__add__`, `__div__`, ..) for CalibMethod objects ??
 - [ ] Add unittest.mock tests.
