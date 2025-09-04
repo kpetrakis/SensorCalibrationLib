@@ -1,7 +1,7 @@
 [project]
 name = "sensorcalibrationlib"
 version = "0.1.0"
-description = "Add your description here"
+description = "A Simple Sensor Calibration Library"
 readme = "README.md"
 authors = [
     { name = "kpetrakis", email = "kostispetrak@gmail.com" }
