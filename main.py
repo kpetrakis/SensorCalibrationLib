@@ -1,42 +1,55 @@
-from sensorcalibrationlib import CalibAPI, LinearRegression
+from sensorcalibrationlib import CalibAPI, LinearFit, QuadraticFit
 import numpy as np
 
-# np.set_printoptions(precision=16, suppress=False)
+np.set_printoptions(precision=3, suppress=False)
 
 if __name__ == "__main__":
-
-  print("MAIN ENTERED")
-
-  x = (1,2,3)
+  
+  x = [1,2,3]
   y = (2,4,6)
-  # raw = [0, 10, 20, 30, 40]
-  # true = [100, 80, 60, 40, 20]
 
-  lr = LinearRegression()
+  api = CalibAPI()
+  print(f"CalibAPI withoud model : {api}")
 
-  # api = CalibAPI(lr)
-  api = CalibAPI(LinearRegression())
-
-  # print(api.parameters())
-
-  # api.export_params("param_files/linear_exp0.json")
+  api = CalibAPI(LinearFit())
+  print(f"CalibAPI with Linear model : {api}")
 
   api.calibrate(x, y)
-  print(api.method._p.coef)
-  params = api.parameters()
-  print("params", params)
-  print(params[0] == 0)
+  print(f"CalibAPI with Linear model after calibration : {api}")
+  print(f"Calibration parameters: {api.parameters()}")
 
-  print(api)
+  print(f"================================")
+  api.receive_calibration_parameters(3, 4) # 3*x + 4
+  print(f"CalibAPI with new parameters : {api}")
+  print(f"Calibration parameters after received from user: {api.parameters()}")
+
+  # predict
+  print(f"================================")
+  print(f"CalibAPI.predict(4): {api.predict(4)}")
+  print(f"CalibAPI.predict([10, 20]): {api.predict([10, 20])}")
+
+  # model modification
+  print(f"================================")
+  api.method = QuadraticFit()
+  print(f"CalibAPI after changing model to Quadratic : {api}")
+  # print(f"CalibAPI.predict(4): {api.predict(4)}")
+
+  # 2*x**2 + x + 1
+  x = [-2, -1, 0, 1, 2]
+  y = [7, 2, 1, 4, 11]
+  api.method = QuadraticFit()
+  api.calibrate(x, y)
+  print(f"CalibAPI with Quadratic model after calibration on (x+1)**2 data : {api}")
+  print(f"CalibAPI with Quadratice model parameters : {api.parameters()}")
+
+  print(f"================================")
+  # import
+  api.import_params("param_files/main.json")
+  print(f"CalibAPI with Quadratice model after import : {api}")
+
+  # export
+  api.method = LinearFit()
+  api.receive_calibration_parameters(5, 10)
+  api.export_params("param_files/main_export.json") # this will be created
 
 
-  api.import_params("param_files/linear0.json")
-  print("params after import", api.parameters())
-  api.export_params("param_files/linear_exp0.json")
-
-  # new = np.array((5,))
-  # p = np.polynomial.Polynomial.fit(x, y, deg=1, domain=[-1,1])
-  # print("p", p)
-  # print("p.domain", p.domain)
-  # print("p.coef", p.coef)
-  # print("p(new) = ", p(new))
