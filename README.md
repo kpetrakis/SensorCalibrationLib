@@ -34,7 +34,29 @@ or
 wget -qO- https://astral.sh/uv/install.sh | sh
 ```
 
-If you have any trouble visit [uv Installation docs](https://docs.astral.sh/uv/getting-started/installation/).
+If you have any trouble with the installation visit [uv Installation docs](https://docs.astral.sh/uv/getting-started/installation/).
+
+Run the following commands
+
+```bash
+git clone https://github.com/kpetrakis/SensorCalibrationLib
+cd SensorCalibrationLib
+uv sync
+```
+
+and you are good to go. Running
+
+```bash
+uv tree
+```
+
+you should see
+
+```bash
+sensorcalibrationlib v0.1.0
+└── numpy v2.3.2
+```
+
 
 ## Running example
 
